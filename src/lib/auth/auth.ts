@@ -3,10 +3,7 @@ import { bearer } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { Pool } from "pg";
 import { v7 as uuidv7 } from "uuid";
-// import {
-//   sendPasswordResetEmail,
-//   sendVerificationEmail,
-// } from "@/lib/auth/send-auth-email";
+import { sendPasswordResetEmail, sendVerificationEmail } from "./send-auth.emaul";
 
 const pool = new Pool({
   host: process.env.DB_HOST || "localhost",
@@ -19,16 +16,16 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-// function getAppUrl(): string {
-//   const raw =
-//     process.env.BETTER_AUTH_APP_URL ||
-//     process.env.NEXT_PUBLIC_APP_URL ||
-//     "http://localhost:3000";
+function getAppUrl(): string {
+  const raw =
+    process.env.BETTER_AUTH_APP_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "http://localhost:3000";
 
-//   return raw.replace(/\/+$/, "");
-// }
+  return raw.replace(/\/+$/, "");
+}
 
-// const appUrl = getAppUrl();
+const appUrl = getAppUrl();
 
 export const auth = betterAuth({
   database: pool, // dùng cấu hình pool trên và better-auth sẽ tự động tạo bảng trong DB, ta không cần phải viết truy vấn
@@ -36,21 +33,23 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true, // người dùng đăng kí xong chưa đăng nhập được ngay mà cần phải xác minh email trước
-    // sendResetPassword: async ({ user, token }) => {
-    //   const resetPasswordUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
+    // là hàm để better-auth gửi resetpassword (flow: user yều cầu reset password -> better-auth tạo token -> chạy hàm sendresetpassword -> đường link xác minh được tạo -> xong gọi sang BE để tạo và gửi email -> xong user bấm đường link -> đg link dẫn đến nextjs -> user sửa mk mới -> xong BE cập nhật lại mk)
+    sendResetPassword: async ({ user, token }) => {
+      // user và token sẽ được truyền tự động vào better-auth
+      const resetPasswordUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`; // bọc trong encode để nó có kí tự đặc biệt sẽ ko làm hỏng url
 
-    //   await sendPasswordResetEmail(user.email, user.name, resetPasswordUrl);
-    // },
+      await sendPasswordResetEmail(user.email, user.name, resetPasswordUrl);
+    },
   },
   emailVerification: {
-    sendOnSignUp: true,
-    autoSignInAfterVerification: false,
-    expiresIn: 24 * 60 * 60,
-    // sendVerificationEmail: async ({ user, token }) => {
-    //   const verifyUrl = `${appUrl}/auth/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
+    sendOnSignUp: true, // vửa đăng kí xong là gửi email xác minh ngay
+    autoSignInAfterVerification: false, // xác minh xong thì người dùng tự đăng nhập hệ thống không tự đăng nhập dùm
+    expiresIn: 24 * 60 * 60, // thời gian xác thực của token email
+    sendVerificationEmail: async ({ user, token }) => {
+      const verifyUrl = `${appUrl}/auth/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
 
-    //   // await sendVerificationEmail(user.email, user.name, verifyUrl);
-    // },
+      await sendVerificationEmail(user.email, user.name, verifyUrl);
+    },
   },
   secret: process.env.BETTER_AUTH_SECRET || "", // dùng khi better-auth tạo token
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000", // địa chỉ nestjs
