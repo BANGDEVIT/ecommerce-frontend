@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { bearer } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { Pool } from "pg";
-// import { v7 as uuidv7 } from "uuid";
+import { v7 as uuidv7 } from "uuid";
 // import {
 //   sendPasswordResetEmail,
 //   sendVerificationEmail,
@@ -19,16 +19,16 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-function getAppUrl(): string {
-  const raw =
-    process.env.BETTER_AUTH_APP_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "http://localhost:3000";
+// function getAppUrl(): string {
+//   const raw =
+//     process.env.BETTER_AUTH_APP_URL ||
+//     process.env.NEXT_PUBLIC_APP_URL ||
+//     "http://localhost:3000";
 
-  return raw.replace(/\/+$/, "");
-}
+//   return raw.replace(/\/+$/, "");
+// }
 
-const appUrl = getAppUrl();
+// const appUrl = getAppUrl();
 
 export const auth = betterAuth({
   database: pool, // dùng cấu hình pool trên và better-auth sẽ tự động tạo bảng trong DB, ta không cần phải viết truy vấn
@@ -36,21 +36,21 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true, // người dùng đăng kí xong chưa đăng nhập được ngay mà cần phải xác minh email trước
-    sendResetPassword: async ({ user, token }) => {
-      const resetPasswordUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
+    // sendResetPassword: async ({ user, token }) => {
+    //   const resetPasswordUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
 
-      // await sendPasswordResetEmail(user.email, user.name, resetPasswordUrl);
-    },
+    //   await sendPasswordResetEmail(user.email, user.name, resetPasswordUrl);
+    // },
   },
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: false,
     expiresIn: 24 * 60 * 60,
-    sendVerificationEmail: async ({ user, token }) => {
-      const verifyUrl = `${appUrl}/auth/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
+    // sendVerificationEmail: async ({ user, token }) => {
+    //   const verifyUrl = `${appUrl}/auth/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(user.email)}`;
 
-      // await sendVerificationEmail(user.email, user.name, verifyUrl);
-    },
+    //   // await sendVerificationEmail(user.email, user.name, verifyUrl);
+    // },
   },
   secret: process.env.BETTER_AUTH_SECRET || "", // dùng khi better-auth tạo token
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000", // địa chỉ nestjs
@@ -95,9 +95,9 @@ export const auth = betterAuth({
       updatedAt: "updated_at",
     },
   },
-  // advanced: {
-  //   database: {
-  //     generateId: () => uuidv7(),
-  //   },
-  // },
+  advanced: {
+    database: {
+      generateId: () => uuidv7(),
+    },
+  },
 });
