@@ -3,7 +3,7 @@ import { bearer } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { Pool } from "pg";
 import { v7 as uuidv7 } from "uuid";
-import { sendPasswordResetEmail, sendVerificationEmail } from "./send-auth.emaul";
+import { sendPasswordResetEmail, sendVerificationEmail } from "./send-auth.email";
 
 const pool = new Pool({
   host: process.env.DB_HOST || "localhost",
